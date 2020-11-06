@@ -2,8 +2,8 @@ const AWS = require("aws-sdk");
 const crypto = require("crypto");
 const generateUUID = () => crypto.randomBytes(16).toString("hex");
 const documentClient = new AWS.DynamoDB.DocumentClient();
-const https = require('https');
-const url = require('url');
+const https = require("https");
+const url = require("url");
 
 async function flipState(serviceName, newState) {
   const params = {
@@ -64,8 +64,8 @@ async function dbConfigRead(tableName, serviceName) {
   const params = {
     TableName: tableName,
     Key: {
-      'ServiceName': serviceName
-    }
+      ServiceName: serviceName,
+    },
   };
 
   try {
@@ -100,24 +100,36 @@ async function dbFailureRead(tableName, serviceName) {
 async function handleRequest(request) {
   // parse url for serviceName
   const serviceName = "ServiceDown";
-  const config = await dbConfigRead('RESOURCES', serviceName);
+  const config = await dbConfigRead("RESOURCES", serviceName);
   const circuitStateObj = await circuitState(serviceName, config, request);
 
   if (circuitStateObj.state === "OPEN") {
-    return {body: {failureKind: circuitStateObj.failureKind}, headers: {status: 504}};
-  } else if (circuitStateObj.state === "HALF-OPEN" && !canRequestProceed(config)) {
-    return {body: {failureKind: circuitStateObj.failureKind}, headers: {status: 504}};
+    return {
+      body: { failureKind: circuitStateObj.failureKind },
+      headers: { status: 504 },
+    };
+  } else if (
+    circuitStateObj.state === "HALF-OPEN" &&
+    !canRequestProceed(config)
+  ) {
+    return {
+      body: { failureKind: circuitStateObj.failureKind },
+      headers: { status: 504 },
+    };
   }
 
   const response = await processRequest(request, config, serviceName);
-console.log('bruhhhh', response)
+  console.log("bruhhhh", response);
   if (response.failure) {
     logFailure(response.key);
   } else if (!response.failure && circuitStateObj.state === "HALF-OPEN") {
     logFailure(response.key);
   }
 
-  return {body: response.body, headers: {status: response.status, headers: response.headers}};
+  return {
+    body: response.body,
+    headers: { status: response.status, headers: response.headers },
+  };
 }
 
 function canRequestProceed(config) {
@@ -129,15 +141,17 @@ function canRequestProceed(config) {
 
 async function circuitState(serviceName, config, request) {
   const { serviceFailures, networkFailures, successes } = await failureCount(
-    request, serviceName
+    request,
+    serviceName
   );
   let failureKind;
   const state = config.CIRCUIT_STATE;
   const response = { state };
 
   if (
-    state === "CLOSED" && (serviceFailures >= config.SERVICE_FAILURE_THRESHOLD ||
-    networkFailures >= config.NETWORK_FAILURE_THRESHOLD)
+    state === "CLOSED" &&
+    (serviceFailures >= config.SERVICE_FAILURE_THRESHOLD ||
+      networkFailures >= config.NETWORK_FAILURE_THRESHOLD)
   ) {
     failureKind =
       serviceFailures >= config.SERVICE_FAILURE_THRESHOLD
@@ -168,16 +182,19 @@ async function circuitState(serviceName, config, request) {
 }
 
 async function failureCount(request, serviceName) {
-  const list = await dbFailureRead('FAILURES');
-  const failures = list.body.filter((obj) => obj.ServiceName.includes(serviceName));
+  const list = await dbFailureRead("FAILURES");
+  const failures = list.body.filter((obj) =>
+    obj.ServiceName.includes(serviceName)
+  );
   const serviceFailures = failures.filter((obj) =>
     obj.ServiceName.includes("@SERVICE_FAILURE_")
   ).length;
   const networkFailures = failures.filter((obj) =>
     obj.ServiceName.includes("@NETWORK_FAILURE_")
   ).length;
-  const successes = failures.filter((obj) => obj.ServiceName.includes("@SUCCESS_"))
-    .length;
+  const successes = failures.filter((obj) =>
+    obj.ServiceName.includes("@SUCCESS_")
+  ).length;
   return { serviceFailures, networkFailures, successes };
 }
 
@@ -185,32 +202,45 @@ async function processRequest(request, config, serviceName) {
   let timeoutId;
   const timeoutPromise = new Promise((resolutionFunc, rejectionFunc) => {
     timeoutId = setTimeout(() => {
-      resolutionFunc({ failure: true, kvKey: "@NETWORK_FAILURE_" + serviceName + generateUUID(), status: 522 });
+      resolutionFunc({
+        failure: true,
+        kvKey: "@NETWORK_FAILURE_" + serviceName + generateUUID(),
+        status: 522,
+      });
     }, config.MAX_LATENCY);
   });
 
   const fetchPromise = new Promise((resolve, reject) => {
-    const req = https.request(Object.assign({}, url.parse(config.SERVICE), {method: 'GET'}), res => {
-      let body, failure, key;
-      res.on('data', (data) => {
-        clearTimeout(timeoutId);
-        failure = false;
-        key = "@SUCCESS_" + serviceName + generateUUID();
-        body = data.toString();
-      })
+    const req = https.request(
+      Object.assign({}, url.parse(config.SERVICE), { method: "GET" }),
+      (res) => {
+        let body, failure, key;
+        res.on("data", (data) => {
+          clearTimeout(timeoutId);
+          failure = false;
+          key = "@SUCCESS_" + serviceName + generateUUID();
+          body = data.toString();
+        });
 
-      res.on('error', reject);
-      res.on('end', () => {
-        if (res.statusCode >= 500) {
-          failure = true;
-          key = "@SERVICE_FAILURE_" + serviceName + generateUUID();
-        }
+        res.on("error", reject);
+        res.on("end", () => {
+          if (res.statusCode >= 500) {
+            failure = true;
+            key = "@SERVICE_FAILURE_" + serviceName + generateUUID();
+          }
 
-        resolve({status: res.statusCode, headers: res.headers, body: body, failure, key});
-      });
-    });
+          resolve({
+            status: res.statusCode,
+            headers: res.headers,
+            body: body,
+            failure,
+            key,
+          });
+        });
+      }
+    );
 
-    req.on('error', (e) => {
+    req.on("error", (e) => {
       console.error(e);
     });
 
@@ -223,5 +253,5 @@ async function processRequest(request, config, serviceName) {
 }
 
 exports.handler = async (event) => {
-  return await handleRequest(event.request)
+  return await handleRequest(event.request);
 };
