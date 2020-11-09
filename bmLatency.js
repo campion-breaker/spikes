@@ -38,19 +38,26 @@ const testLatency = (path, service, platform) => {
   // });
 };
 
-const runTest = async () => {
-  for (let i = 0; i < 20; i += 1) {
-    await testLatency(
-      "https://i9orjrmvuc.execute-api.us-east-1.amazonaws.com/default/campion",
-      "Success",
-      "Lambdas"
-    );
+const runTest = async (path, platform) => {
+  for (let i = 0; i < 200
+    ; i += 1) {
+    await testLatency(path, "Success", platform);
   }
   let totalTime = 0;
   results.forEach((req) => (totalTime += req.latency));
 
-  console.log(results);
-  console.log(Math.floor(totalTime / results.length));
+  // results.forEach((r) => console.log(r.platform, r.latency));
+  console.log(
+    platform,
+    Math.floor(totalTime / results.length),
+    "------------------------------------------------------"
+  );
 };
 
-runTest();
+runTest("https://arthurk.dev/", "Control");
+runTest("http://d1wbfajts7umn1.cloudfront.net/", "LambdaEdge");
+runTest("https://campion.gabedealmeida.workers.dev/", "Workers");
+runTest(
+  "https://i9orjrmvuc.execute-api.us-east-1.amazonaws.com/default/campion",
+  "Lambda"
+);
