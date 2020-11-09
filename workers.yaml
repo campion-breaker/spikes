@@ -1,5 +1,5 @@
 config:
-  target: http://d1wbfajts7umn1.cloudfront.net/
+  target: https://campion.gabedealmeida.workers.dev/
   phases:
     - duration: 30
       arrivalRate: 5
