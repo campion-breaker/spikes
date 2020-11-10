@@ -2,7 +2,11 @@ config:
   target: https://campion.gabedealmeida.workers.dev/
   phases:
     - duration: 30
+<<<<<<< HEAD
       arrivalRate: 50
+=======
+      arrivalRate: 5
+>>>>>>> b319a257a5d9a04eb2df1d3e2bc19e5d655d4af1
 scenarios:
   - flow:
       - get:

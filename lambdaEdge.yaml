@@ -2,7 +2,7 @@ config:
   target: http://d1wbfajts7umn1.cloudfront.net/
   phases:
     - duration: 30
-      arrivalRate: 50
+      arrivalRate: 5
 scenarios:
   - flow:
       - get:
