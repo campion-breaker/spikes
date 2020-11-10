@@ -1,9 +1,0 @@
-config:
-  target: https://campion.gabedealmeida.workers.dev/
-  phases:
-    - duration: 30
-      arrivalRate: 5
-scenarios:
-  - flow:
-      - get:
-          url: "/"
