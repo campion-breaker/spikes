@@ -1,0 +1,10 @@
+config:
+  target: https://r6l425wws8.execute-api.us-east-2.amazonaws.com/CampionTesting
+  phases:
+    - duration: 30
+      arrivalRate: 5
+scenarios:
+  - flow:
+      - get:
+          url: "/campionTester"
+
