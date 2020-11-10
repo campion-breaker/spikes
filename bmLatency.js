@@ -16,9 +16,9 @@
 //   serviceDown: "https://broken-rice-127c.bziggz.workers.dev/",
 // };
 
-const results = [];
+// const results = [];
 
-const testLatency = (path, service, platform) => {
+const testLatency = (path, service, platform, destination) => {
   const times = {
     path,
     service,
@@ -26,10 +26,11 @@ const testLatency = (path, service, platform) => {
     requestSent: Date.now(),
   };
 
-  return fetch(path).then(() => {
+  return fetch(path).then((data) => {
     times.responseReceived = Date.now();
+    times.status = data.status;
     times.latency = times.responseReceived - times.requestSent;
-    results.push(times);
+    destination.push(times);
   });
   // .catch(() => {
   //   times.timeoutAt = Date.now();
@@ -38,26 +39,26 @@ const testLatency = (path, service, platform) => {
   // });
 };
 
-const runTest = async (path, platform) => {
-  for (let i = 0; i < 200
-    ; i += 1) {
-    await testLatency(path, "Success", platform);
+const runTest = async (path, platform, destination) => {
+  for (let i = 0; i < 10; i += 1) {
+    await testLatency(path, "Success", platform, destination);
   }
   let totalTime = 0;
-  results.forEach((req) => (totalTime += req.latency));
+  destination.forEach((req) => (totalTime += req.latency));
 
-  // results.forEach((r) => console.log(r.platform, r.latency));
+  destination.forEach((r) => console.log(r.platform, r.status, r.latency));
   console.log(
     platform,
-    Math.floor(totalTime / results.length),
+    Math.floor(totalTime / destination.length),
     "------------------------------------------------------"
   );
 };
 
-runTest("https://arthurk.dev/", "Control");
-runTest("http://d1wbfajts7umn1.cloudfront.net/", "LambdaEdge");
-runTest("https://campion.gabedealmeida.workers.dev/", "Workers");
+runTest("https://syd.mirror.rackspace.com/archlinux/", "Control", []);
+runTest("http://d1wbfajts7umn1.cloudfront.net/", "LambdaEdge", []);
+runTest("https://campion.gabedealmeida.workers.dev/", "Workers", []);
 runTest(
-  "https://i9orjrmvuc.execute-api.us-east-1.amazonaws.com/default/campion",
-  "Lambda"
+  "https://r6l425wws8.execute-api.us-east-2.amazonaws.com/CampionTesting/campionTester",
+  "Lambda",
+  []
 );

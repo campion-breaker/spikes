@@ -1,0 +1,9 @@
+config:
+  target: https://syd.mirror.rackspace.com/archlinux/
+  phases:
+    - duration: 30
+      arrivalRate: 50
+scenarios:
+  - flow:
+      - get:
+          url: "/"
