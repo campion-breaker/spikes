@@ -1,0 +1,18 @@
+{
+  "name": "campion",
+  "version": "1.0.0",
+  "description": "Circuit Breaker",
+  "main": "campionApiTesting.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/campion-breaker"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
