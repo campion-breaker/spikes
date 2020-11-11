@@ -1,5 +1,5 @@
 config:
-  target: https://arthurk.dev
+  target: https://mirrors.lug.mtu.edu/archlinux/
   phases:
     - duration: 30
       arrivalRate: 5
