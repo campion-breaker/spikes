@@ -1,38 +1,89 @@
 const fetch = require("node-fetch");
-
-const email = "arthur@sent.com";
-const apiKey = "7d24e00950504429425723184b634b4b6366e";
-
-let accountId;
+require('dotenv').config();
 
 async function getAccountId() {
   const data = await fetch("https://api.cloudflare.com/client/v4/accounts", {
     headers: {
-      "X-Auth-Email": email,
-      "X-Auth-Key": apiKey,
-      "Content-Type": "application/json",
-    },
-  }).then((response) => response.json().then((data) => data));
+      'X-Auth-Email': process.env.EMAIL,
+      'X-Auth-Key': process.env.APIKEY,
+      'Content-Type': 'application/json'
+    }
+  });
 
-  accountId = JSON.parse(data).result[0].id;
+  const body = await data.json();
+  return body.result[0].id;
+};
+
+async function getNamespaceIds(accountId) {
+  const data = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces`,
+    {
+      method: "GET",
+      headers: {
+        "X-Auth-Email": process.env.EMAIL,
+        "X-Auth-Key": process.env.APIKEY,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const body = await data.json();
+  return body.result;
 }
 
 async function putWorker() {
-  await getAccountId();
-  console.log(accountId);
-  return await fetch(
+  const accountId = await getAccountId();
+  const data = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/testworkerfuckdeno2`,
     {
       method: "PUT",
       headers: {
-        "X-Auth-Email": email,
-        "X-Auth-Key": apiKey,
+        "X-Auth-Email": process.env.EMAIL,
+        "X-Auth-Key": process.env.APIKEY,
         "Content-Type": "application/javascript",
       },
       body:
-        "addEventListener('fetch', penis => { penis.respondWith(fetch(penis.request)) })",
+        "addEventListener('fetch', hello => { penis.respondWith(fetch(hello.request)) })",
     }
-  ).then((response) => response.body
+  );
 }
 
-putWorker();
+async function createNamespace() {
+  const accountId = await getAccountId();
+  const data = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces`,
+    {
+      method: "POST",
+      headers: {
+        "X-Auth-Email": process.env.EMAIL,
+        "X-Auth-Key": process.env.APIKEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({title: "Testing123"}),
+    }
+  );
+  const body = await data.json();
+}
+
+async function writeToNamespace() {
+  const accountId = await getAccountId();
+  const namespaces = await getNamespaceIds(accountId);
+  const namespaceId = namespaces.filter((kv) => kv.title === 'Testing123')[0].id;
+
+  const data = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/penis`,
+    {
+      method: "PUT",
+      headers: {
+        "X-Auth-Email": process.env.EMAIL,
+        "X-Auth-Key": process.env.APIKEY,
+        "Content-Type": "text/plain",
+      },
+      body: JSON.stringify({title: "hi", what: "testing"}),
+    }
+  );
+  const body = await data.json();
+  console.log(body)
+}
+
+writeToNamespace();
