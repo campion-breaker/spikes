@@ -91,9 +91,9 @@ async function writeToNamespace() {
   console.log(body);
 }
 
-async function test() {
+async function createWorkerWithKVBinding() {
   const accountId = await getAccountId();
-  const newWorkerId = "test2";
+  const newWorkerId = "campion";
   const scriptData =
     "addEventListener('fetch', hello => { hello.respondWith(fetch(hello.request)) })";
   const metadata = {
@@ -126,4 +126,3 @@ async function test() {
   const body = await data.json();
   console.log(body);
 }
-
