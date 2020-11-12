@@ -92,20 +92,27 @@ async function writeToNamespace() {
 async function test() {
   const accountId = await getAccountId();
   const form = new FormData();
-  form.append('bindings', JSON.stringify([{"name": "HELLO",
-  "namespace_id": "0f026bbb1c6d490ca6e64015b9fe93c1",
-  "type": "kv_namespace"}]));
+  const metadata = {
+    "body_part": "script",
+    "bindings": [
+      {
+        "type": "kv_namespace",
+        "name": "hello",
+        "namespace_id": "25e577f693eb4c6291e25bd26bec0865"
+      }
+    ]
+  };
 
+  form.append('metadata', JSON.stringify(metadata));
   form.append('script', "addEventListener('fetch', hello => { hello.respondWith(fetch(hello.request)) })");
-
+  console.log(form)
   const data = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/testhello/bindings`,
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/testhello2/`,
     {
       method: "PUT",
       headers: {
         "X-Auth-Email": process.env.EMAIL,
         "X-Auth-Key": process.env.APIKEY,
-        "Content-Type": `multipart/form-data; boundary=${form._boundary}`,
       },
       body: form,
     }
@@ -114,3 +121,5 @@ async function test() {
   const body = await data.json();
   console.log(body)
 }
+
+test()
