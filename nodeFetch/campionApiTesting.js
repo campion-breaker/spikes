@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const FormData = require('form-data');
 require('dotenv').config();
 
 async function getAccountId() {
@@ -11,7 +12,6 @@ async function getAccountId() {
   });
 
   const body = await data.json();
-  console.log(body.result[0].id)
   return body.result[0].id;
 };
 
@@ -43,10 +43,12 @@ async function putWorker() {
         "X-Auth-Key": process.env.APIKEY,
         "Content-Type": "application/javascript",
       },
-      body:
-        "addEventListener('fetch', hello => { hello.respondWith(fetch(hello.request)) })",
+      body: "addEventListener('fetch', hello => { hello.respondWith(fetch(hello.request)) })",
     }
   );
+
+  const body = await data.json();
+  console.log(body)
 }
 
 async function createNamespace() {
@@ -87,26 +89,28 @@ async function writeToNamespace() {
   console.log(body)
 }
 
-// async function testBindingCreation() {
-//   const accountId = await getAccountId();
-//   const data = await fetch(
-//     `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/campion2`,
-//     {
-//       method: "PUT",
-//       headers: {
-//         "X-Auth-Email": process.env.EMAIL,
-//         "X-Auth-Key": process.env.APIKEY,
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({"script": "addEventListener('fetch', hello => { hello.respondWith(fetch(hello.request)) })", "bindings": [{"name": "HELLO",
-//       "namespace_id": "0f026bbb1c6d490ca6e64015b9fe93c1",
-//       "type": "kv_namespace"}]
-//      })
-//     }
-//   );
+async function test() {
+  const accountId = await getAccountId();
+  const form = new FormData();
+  form.append('bindings', JSON.stringify([{"name": "HELLO",
+  "namespace_id": "0f026bbb1c6d490ca6e64015b9fe93c1",
+  "type": "kv_namespace"}]));
 
-//   const body = await data.json();
-//   console.log(body)
-// }
+  form.append('script', "addEventListener('fetch', hello => { hello.respondWith(fetch(hello.request)) })");
 
-// testBindingCreation()
+  const data = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/testhello/bindings`,
+    {
+      method: "PUT",
+      headers: {
+        "X-Auth-Email": process.env.EMAIL,
+        "X-Auth-Key": process.env.APIKEY,
+        "Content-Type": `multipart/form-data; boundary=${form._boundary}`,
+      },
+      body: form,
+    }
+  );
+
+  const body = await data.json();
+  console.log(body)
+}
